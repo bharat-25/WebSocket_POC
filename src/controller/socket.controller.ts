@@ -1,6 +1,8 @@
 import { Server, Socket } from "socket.io";
 import { UserModel } from "../model/user.model";
 import ChatModel from "../model/chat.model";
+import { producer } from "../integrations/kafka/producer.service";
+import { Message } from "kafkajs";
 
 interface SocketData {
   senderMobileNo: string;
@@ -57,8 +59,15 @@ export const handleSocketConnection = (io: Server) => {
         const receiverSocketId = socketIdByUserMobile[receiverMobileNo];
 
         if (receiverSocketId) {
-          const messageData = { senderName: senderUser.name, receiverName: receiverUser.name, message };
+          const messageData = { senderName: senderUser.name.toString(), receiverName: receiverUser.name.toString(), message };
+          const kafkaMessage: Message = {
+            value: JSON.stringify(messageData),
+          };
+          
           console.log(`${messageData.senderName} sending to ${messageData.receiverName} MESSAGE:`, message);
+          await producer.produce("KAFKA-TOPIC-PRODUCER", kafkaMessage);
+
+
           io.to(receiverSocketId).emit("private-chat", messageData);
         } else {
           console.log(`Receiver's socket ID not found for mobile number: ${receiverMobileNo}`);

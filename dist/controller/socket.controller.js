@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.handleSocketConnection = void 0;
 const user_model_1 = require("../model/user.model");
 const chat_model_1 = __importDefault(require("../model/chat.model"));
+const producer_service_1 = require("../integrations/kafka/producer.service");
 const handleSocketConnection = (io) => {
     const socketIdByUserMobile = {};
     const onlineUsers = {};
@@ -46,8 +47,12 @@ const handleSocketConnection = (io) => {
                 });
                 const receiverSocketId = socketIdByUserMobile[receiverMobileNo];
                 if (receiverSocketId) {
-                    const messageData = { senderName: senderUser.name, receiverName: receiverUser.name, message };
+                    const messageData = { senderName: senderUser.name.toString(), receiverName: receiverUser.name.toString(), message };
+                    const kafkaMessage = {
+                        value: JSON.stringify(messageData),
+                    };
                     console.log(`${messageData.senderName} sending to ${messageData.receiverName} MESSAGE:`, message);
+                    await producer_service_1.producer.produce("KAFKA-TOPIC-PRODUCER", kafkaMessage);
                     io.to(receiverSocketId).emit("private-chat", messageData);
                 }
                 else {

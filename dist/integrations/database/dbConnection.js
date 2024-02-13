@@ -11,11 +11,9 @@ const DB_connection = async () => {
     try {
         await mongoose_1.default.connect(url);
         console.log("Succesfully connected to the database");
-        // logger.log({level:"info",message:`Succesfully connected to the db`});
     }
     catch (e) {
         console.log("Database connection Error");
-        // logger.log({level:"error",message:"ERRRRRR"});
     }
 };
 exports.DB_connection = DB_connection;

@@ -9,10 +9,11 @@ const socket_io_1 = require("socket.io");
 const socket_controller_1 = require("../../controller/socket.controller");
 const express_1 = __importDefault(require("express"));
 const path_1 = __importDefault(require("path"));
+const appConfig_1 = __importDefault(require("../../config/appConfig"));
 const app = (0, express_1.default)();
 const server = http_1.default.createServer(app);
 const io = new socket_io_1.Server(server);
-const port = process.env.SOCKET_PORT;
+const port = appConfig_1.default.env.SOCKET_PORT;
 app.use(express_1.default.json());
 const SOCKET = async () => {
     try {

@@ -5,7 +5,7 @@
   "main": "index.ts",
   "scripts": {
     "build": "tsc",
-    "start": "npm run build && NODE_ENV=local node dist/index.js"
+    "local": "npm run build && NODE_ENV=local node dist/index.js"
   },
   "keywords": [],
   "author": "",
@@ -19,6 +19,7 @@
     "fs": "^0.0.1-security",
     "joi": "^17.12.1",
     "jsonwebtoken": "^9.0.2",
+    "kafkajs": "^2.2.4",
     "mongoose": "^8.1.1",
     "socket.io": "^4.7.4"
   },

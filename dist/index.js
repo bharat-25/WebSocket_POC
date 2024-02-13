@@ -10,11 +10,20 @@ const chat_routes_1 = require("./routes/chat.routes");
 const user_routes_1 = require("./routes/user.routes");
 const socket_connection_1 = require("./integrations/socket/socket.connection");
 const push_notification_1 = require("./service/fcm/push-notification");
+const appConfig_1 = __importDefault(require("./config/appConfig"));
+const kafka_1 = require("./integrations/kafka/kafka");
 class App {
     constructor() {
         this.callback = () => {
             console.log(`Server listing on port: ${this.port}`);
         };
+        this.app = (0, express_1.default)();
+        try {
+            this.kafka = new kafka_1.KafkaManager();
+        }
+        catch (error) {
+            console.error(`Error initializing KafkaManager: ${error}`);
+        }
         this.startApp();
         (0, dbConnection_1.DB_connection)();
         (0, socket_connection_1.SOCKET)();
@@ -25,10 +34,14 @@ class App {
      */
     startApp() {
         this.app = (0, express_1.default)();
-        this.port = process.env.PORT || constant_1.portNumber;
+        this.port = appConfig_1.default.env.PORT;
         this.loadGlobalMiddleWare();
         this.loadRouter();
         this.Server();
+        this.kafka.connectToAdmin();
+        this.kafka.createTopics();
+        this.kafka.metadataOfTopics();
+        this.kafka.disconnectFromAdmin();
     }
     /**
    * @description Load global Middlewares

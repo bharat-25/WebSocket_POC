@@ -3,12 +3,13 @@ import { Server } from "socket.io";
 import { handleSocketConnection } from "../../controller/socket.controller";
 import express from "express";
 import path from "path";
+import appConfig from "../../config/appConfig";
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-const port = process.env.SOCKET_PORT;
+const port = appConfig.env.SOCKET_PORT;
 
 app.use(express.json());
 
