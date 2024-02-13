@@ -1,7 +1,7 @@
 import { Server, Socket } from "socket.io";
 import { UserModel } from "../model/user.model";
 import ChatModel from "../model/chat.model";
-import { producer } from "../integrations/kafka/producer.service";
+import { producer } from "../integrations/producer/kafka/producer.service";
 import { Message } from "kafkajs";
 
 interface SocketData {
@@ -63,7 +63,7 @@ export const handleSocketConnection = (io: Server) => {
           const kafkaMessage: Message = {
             value: JSON.stringify(messageData),
           };
-          
+
           console.log(`${messageData.senderName} sending to ${messageData.receiverName} MESSAGE:`, message);
           await producer.produce("KAFKA-TOPIC-PRODUCER", kafkaMessage);
 

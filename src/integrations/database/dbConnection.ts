@@ -1,6 +1,8 @@
 import mongoose from "mongoose";
 import '../../config/env'
-const url:any = process.env.DB_CONNECTION_URL;
+import appConfig from "../../config/appConfig";
+const url = appConfig.env.DB_URL;
+console.log("-------------->url is------__>",url)
 
 export const DB_connection = async () => {
   try {

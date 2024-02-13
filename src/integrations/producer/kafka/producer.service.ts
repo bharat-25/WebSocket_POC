@@ -1,5 +1,5 @@
 import { Message } from 'kafkajs';
-import { IProducer } from '../../interface/kafka.interface';
+import { IProducer } from '../../../interface/kafka.interface';
 import { KafkaProducer } from './producer.tkafka';
 class ProducerService {
     private readonly producers = new Map<string, IProducer>();
@@ -13,7 +13,7 @@ class ProducerService {
         try {
             const producer = await this.getProducer(topic);
             await producer.produce(message);
-            console.log('Kafka Producer Message Published :: ');
+            console.log('Kafka Producer Message Published :: ',message);
         } catch (error) {
             console.log('Kafka Producer Error :: ', error);
         }

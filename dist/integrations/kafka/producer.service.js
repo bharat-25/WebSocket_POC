@@ -15,7 +15,7 @@ class ProducerService {
         try {
             const producer = await this.getProducer(topic);
             await producer.produce(message);
-            console.log('Kafka Producer Message Published :: ');
+            console.log('Kafka Producer Message Published :: ', message);
         }
         catch (error) {
             console.log('Kafka Producer Error :: ', error);

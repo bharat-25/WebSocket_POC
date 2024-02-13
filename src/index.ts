@@ -6,7 +6,7 @@ import { userRouters } from './routes/user.routes';
 import { SOCKET } from './integrations/socket/socket.connection';
 import { pushNotification } from './service/fcm/push-notification';
 import appConfig from './config/appConfig';
-import { KafkaManager } from './integrations/kafka/kafka';
+import { KafkaManager } from './integrations/producer/kafka/kafka';
 
 class App{
     private app!:Express;

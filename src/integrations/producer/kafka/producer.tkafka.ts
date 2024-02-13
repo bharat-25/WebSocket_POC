@@ -1,4 +1,4 @@
-import { IProducer } from '../../interface/kafka.interface';
+import { IProducer } from '../../../interface/kafka.interface';
 import { Producer, Message } from 'kafkajs';
 import { KafkaManager } from './kafka';
 
