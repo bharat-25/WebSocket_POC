@@ -7,8 +7,6 @@ import {PushNotificationService} from '../service/fcm/push-notification';
 import { KafkaManager } from "../integrations/consumer/kafka";
 import { consumer } from "../integrations/consumer/consumer.service";
 
-let kafka!:KafkaManager
-
 let kafka!:KafkaManager;
 interface SocketData {
   senderMobileNo: string;
