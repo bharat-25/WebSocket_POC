@@ -7,6 +7,8 @@ import {PushNotificationService} from '../service/fcm/push-notification';
 import { KafkaManager } from "../integrations/consumer/kafka";
 import { consumer } from "../integrations/consumer/consumer.service";
 
+let kafka!:KafkaManager
+
 interface SocketData {
   senderMobileNo: string;
   receiverMobileNo: string;
@@ -186,9 +188,9 @@ async function getPendingMessages(receiverMobileNo: string): Promise<any> {
     // Example implementation using ChatModel
     // const pendingMessages = await ChatModel.find({ receiverMobileNo, delivered: false });
     this.kafka = new KafkaManager();
-     await this.kafka.connectToAdmin();
-     await this.kafka.createTopics();
-     await this.kafka.disconnectFromAdmin();
+     await kafka.connectToAdmin();
+     await kafka.createTopics();
+     await kafka.disconnectFromAdmin();
      consumer.initiateConsumer();
   } catch (error) {
     console.error("Error retrieving pending messages:", error);
