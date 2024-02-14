@@ -9,6 +9,7 @@ import { consumer } from "../integrations/consumer/consumer.service";
 
 let kafka!:KafkaManager
 
+let kafka!:KafkaManager;
 interface SocketData {
   senderMobileNo: string;
   receiverMobileNo: string;
