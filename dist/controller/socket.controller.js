@@ -10,6 +10,7 @@ const producer_service_1 = require("../integrations/producer/kafka/producer.serv
 const push_notification_1 = require("../service/fcm/push-notification");
 const kafka_1 = require("../integrations/consumer/kafka");
 const consumer_service_1 = require("../integrations/consumer/consumer.service");
+let kafka;
 const handleSocketConnection = (io) => {
     const socketIdByUserMobile = {};
     const onlineUsers = {};
@@ -153,9 +154,9 @@ async function getPendingMessages(receiverMobileNo) {
         // Example implementation using ChatModel
         // const pendingMessages = await ChatModel.find({ receiverMobileNo, delivered: false });
         this.kafka = new kafka_1.KafkaManager();
-        await this.kafka.connectToAdmin();
-        await this.kafka.createTopics();
-        await this.kafka.disconnectFromAdmin();
+        await kafka.connectToAdmin();
+        await kafka.createTopics();
+        await kafka.disconnectFromAdmin();
         consumer_service_1.consumer.initiateConsumer();
     }
     catch (error) {
