@@ -8,6 +8,7 @@ const user_model_1 = require("../model/user.model");
 const chat_model_1 = __importDefault(require("../model/chat.model"));
 const producer_service_1 = require("../integrations/producer/kafka/producer.service");
 const push_notification_1 = require("../service/fcm/push-notification");
+let kafka;
 const handleSocketConnection = (io) => {
     const socketIdByUserMobile = {};
     const onlineUsers = {};

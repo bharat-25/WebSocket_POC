@@ -4,7 +4,9 @@ import ChatModel from "../model/chat.model";
 import { Message } from "kafkajs";
 import { producer } from "../integrations/producer/kafka/producer.service";
 import {PushNotificationService} from '../service/fcm/push-notification';
+import { KafkaManager } from "../integrations/consumer/kafka";
 
+let kafka!:KafkaManager;
 interface SocketData {
   senderMobileNo: string;
   receiverMobileNo: string;
@@ -182,7 +184,6 @@ async function getPendingMessages(receiverMobileNo: string): Promise<any[]> {
     // Retrieve pending messages for the receiverMobileNo from the database
     // Example implementation using ChatModel
     const pendingMessages = await ChatModel.find({ receiverMobileNo, delivered: false });
-    
     return pendingMessages;
   } catch (error) {
     console.error("Error retrieving pending messages:", error);
