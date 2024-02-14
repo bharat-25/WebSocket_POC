@@ -23,6 +23,9 @@ export const handleSocketConnection = (io: Server) => {
       socketIdByUserMobile[senderMobileNo] = socket.id;
       onlineUsers[senderMobileNo] = true;
       console.log(`User with mobile number ${senderMobileNo} is connected with socket ID ${socket.id}`);
+    
+      // Check for any pending messages for this user and send push notifications
+      sendPendingMessages(senderMobileNo);
     };
 
     const handleDisconnect = () => {
@@ -53,40 +56,63 @@ export const handleSocketConnection = (io: Server) => {
 
         const chat = await ChatModel.create({
           senderId: senderUser.id,
-          receiverId: receiverUser.id,
+          receiverId:  receiverUser ? receiverUser.id : null,
           message,
         });
 
-        const receiverSocketId = socketIdByUserMobile[receiverMobileNo];
+        const messageData = { senderName: senderUser.name.toString(), receiverName: receiverUser ? receiverUser.name.toString() : null, message };
+        const kafkaMessage: Message = {
+          value: JSON.stringify(messageData),
+        };
 
-        if (receiverSocketId) {
-          const messageData = { senderName: senderUser.name.toString(), receiverName: receiverUser.name.toString(), message };
-          const kafkaMessage: Message = {
-            value: JSON.stringify(messageData),
-          };
+        await producer.produce("KAFKA-TOPIC-PRODUCER", kafkaMessage);
 
-          console.log(`${messageData.senderName} sending to ${messageData.receiverName} MESSAGE:`, message);
-
-          if (!receiverSocketId)
-          await producer.produce("KAFKA-TOPIC-PRODUCER", kafkaMessage);
-
-          io.to(receiverSocketId).emit("private-chat", messageData);
-
-          let fcmToken="fghsfdHGfhgscfghfhgGCFhkHJDGJhvcdbNS"
-
-          // Get an instance of PushNotificationService
-          const pushNotificationService = PushNotificationService.getInstance();
-
-          // Call the sendPushNotification method on the instance
-          await pushNotificationService.sendPushNotification(fcmToken, { title: "New Message", body: message });
-
+        console.log(`${messageData.senderName} sending to ${messageData.receiverName} MESSAGE:`, message);
+        
+        
+        if (receiverUser) {
+          const receiverSocketId = socketIdByUserMobile[receiverMobileNo];
+          if (receiverSocketId) {
+            io.to(receiverSocketId).emit("private-chat", messageData);
+          } else {
+            // Receiver is offline, save the message as pending
+            savePendingMessage(receiverMobileNo, messageData);
+          }
         } else {
-          console.log(`Receiver's socket ID not found for mobile number: ${receiverMobileNo}`);
+          // Receiver not found, save the message as pending
+          savePendingMessage(receiverMobileNo, messageData);
         }
       } catch (error) {
         console.error("Error processing private chat:", error);
       }
     });
+    //       const messageData = { senderName: senderUser.name.toString(), receiverName: receiverUser.name.toString(), message };
+    //       const kafkaMessage: Message = {
+    //         value: JSON.stringify(messageData),
+    //       };
+
+    //       console.log(`${messageData.senderName} sending to ${messageData.receiverName} MESSAGE:`, message);
+
+    //       await producer.produce("KAFKA-TOPIC-PRODUCER", kafkaMessage);
+
+    //       io.to(receiverSocketId).emit("private-chat", messageData);
+
+    //       let fcmToken="fghsfdHGfhgscfghfhgGCFhkHJDGJhvcdbNS"
+
+    //       // Get an instance of PushNotificationService
+    //       const pushNotificationService = PushNotificationService.getInstance();
+
+    //       // Call the sendPushNotification method on the instance
+    //       await pushNotificationService.sendPushNotification(fcmToken, { title: "New Message", body: message });
+
+    //     } else {
+
+    //       console.log(`Receiver's socket ID not found for mobile number: ${receiverMobileNo}`);
+    //     }
+    //   } catch (error) {
+    //     console.error("Error processing private chat:", error);
+    //   }
+    // });
 
     const handleTyping = (data: SocketData) => {
       const receiverSocketId = socketIdByUserMobile[data.receiverMobileNo];
@@ -106,6 +132,64 @@ export const handleSocketConnection = (io: Server) => {
     socket.on("stopTyping", handleStopTyping);
   });
 };
+
+async function savePendingMessage(receiverMobileNo: string, messageData: any) {
+  try {
+    // Save the message as pending in the database
+    const chat = await ChatModel.create({
+      senderMobileNo: messageData.senderMobileNo,
+      receiverMobileNo: receiverMobileNo,
+      message: messageData.message,
+      delivered: false // Mark the message as not delivered
+    });
+    console.log("Message saved as pending:", chat);
+  } catch (error) {
+    console.error("Error saving pending message:", error);
+    throw error;
+  }
+}
+
+async function sendPendingMessages(receiverMobileNo: string) {
+  try {
+    // Retrieve pending messages for the receiverMobileNo from the database
+    const pendingMessages = await getPendingMessages(receiverMobileNo);
+
+    // Get an instance of PushNotificationService
+    const pushNotificationService = PushNotificationService.getInstance();
+
+    // Send push notifications for pending messages
+    for (const messageData of pendingMessages) {
+      await pushNotificationService.sendPushNotification(
+        messageData.receiverMobileNo,
+        { title: "New Message", body: messageData.message }
+      );
+      
+      // Update the message as delivered
+      await ChatModel.updateOne(
+        { _id: messageData._id },
+        { $set: { delivered: true } }
+      );
+      console.log("Push notification sent and message marked as delivered:", messageData);
+    }
+  } catch (error) {
+    console.error("Error sending pending messages:", error);
+    throw error;
+  }
+}
+
+async function getPendingMessages(receiverMobileNo: string): Promise<any[]> {
+  try {
+    // Retrieve pending messages for the receiverMobileNo from the database
+    // Example implementation using ChatModel
+    const pendingMessages = await ChatModel.find({ receiverMobileNo, delivered: false });
+    
+    return pendingMessages;
+  } catch (error) {
+    console.error("Error retrieving pending messages:", error);
+    throw error;
+  }
+}
+
 
 
 
