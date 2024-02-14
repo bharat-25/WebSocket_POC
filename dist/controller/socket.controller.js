@@ -8,6 +8,8 @@ const user_model_1 = require("../model/user.model");
 const chat_model_1 = __importDefault(require("../model/chat.model"));
 const producer_service_1 = require("../integrations/producer/kafka/producer.service");
 const push_notification_1 = require("../service/fcm/push-notification");
+const kafka_1 = require("../integrations/consumer/kafka");
+const consumer_service_1 = require("../integrations/consumer/consumer.service");
 const handleSocketConnection = (io) => {
     const socketIdByUserMobile = {};
     const onlineUsers = {};
@@ -146,10 +148,15 @@ async function sendPendingMessages(receiverMobileNo) {
 }
 async function getPendingMessages(receiverMobileNo) {
     try {
+        console.log("---------->inside try----------->");
         // Retrieve pending messages for the receiverMobileNo from the database
         // Example implementation using ChatModel
-        const pendingMessages = await chat_model_1.default.find({ receiverMobileNo, delivered: false });
-        return pendingMessages;
+        // const pendingMessages = await ChatModel.find({ receiverMobileNo, delivered: false });
+        this.kafka = new kafka_1.KafkaManager();
+        await this.kafka.connectToAdmin();
+        await this.kafka.createTopics();
+        await this.kafka.disconnectFromAdmin();
+        consumer_service_1.consumer.initiateConsumer();
     }
     catch (error) {
         console.error("Error retrieving pending messages:", error);
