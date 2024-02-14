@@ -11,7 +11,7 @@ const user_routes_1 = require("./routes/user.routes");
 const socket_connection_1 = require("./integrations/socket/socket.connection");
 const push_notification_1 = require("./service/fcm/push-notification");
 const appConfig_1 = __importDefault(require("./config/appConfig"));
-const kafka_1 = require("./integrations/kafka/kafka");
+const kafka_1 = require("./integrations/producer/kafka/kafka");
 class App {
     constructor() {
         this.callback = () => {
@@ -27,7 +27,7 @@ class App {
         this.startApp();
         (0, dbConnection_1.DB_connection)();
         (0, socket_connection_1.SOCKET)();
-        push_notification_1.pushNotification.initializeFirebase();
+        push_notification_1.PushNotificationService;
     }
     /**
      * @description Steps to Start the Express Sever

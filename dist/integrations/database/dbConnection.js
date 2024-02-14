@@ -8,7 +8,7 @@ const mongoose_1 = __importDefault(require("mongoose"));
 require("../../config/env");
 const appConfig_1 = __importDefault(require("../../config/appConfig"));
 const url = appConfig_1.default.env.DB_URL;
-console.log("-------------->url is------__>", url);
+// console.log("-------------->url is------__>",url)
 const DB_connection = async () => {
     try {
         await mongoose_1.default.connect(url);

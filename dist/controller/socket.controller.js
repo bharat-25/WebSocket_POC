@@ -6,7 +6,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.handleSocketConnection = void 0;
 const user_model_1 = require("../model/user.model");
 const chat_model_1 = __importDefault(require("../model/chat.model"));
-const producer_service_1 = require("../integrations/kafka/producer.service");
+const producer_service_1 = require("../integrations/producer/kafka/producer.service");
+const push_notification_1 = require("../service/fcm/push-notification");
 const handleSocketConnection = (io) => {
     const socketIdByUserMobile = {};
     const onlineUsers = {};
@@ -52,8 +53,14 @@ const handleSocketConnection = (io) => {
                         value: JSON.stringify(messageData),
                     };
                     console.log(`${messageData.senderName} sending to ${messageData.receiverName} MESSAGE:`, message);
-                    await producer_service_1.producer.produce("KAFKA-TOPIC-PRODUCER", kafkaMessage);
+                    if (!receiverSocketId)
+                        await producer_service_1.producer.produce("KAFKA-TOPIC-PRODUCER", kafkaMessage);
                     io.to(receiverSocketId).emit("private-chat", messageData);
+                    let fcmToken = "fghsfdHGfhgscfghfhgGCFhkHJDGJhvcdbNS";
+                    // Get an instance of PushNotificationService
+                    const pushNotificationService = push_notification_1.PushNotificationService.getInstance();
+                    // Call the sendPushNotification method on the instance
+                    await pushNotificationService.sendPushNotification(fcmToken, { title: "New Message", body: message });
                 }
                 else {
                     console.log(`Receiver's socket ID not found for mobile number: ${receiverMobileNo}`);

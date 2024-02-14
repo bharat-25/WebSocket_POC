@@ -23,19 +23,41 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.pushNotification = void 0;
+exports.PushNotificationService = void 0;
 const admin = __importStar(require("firebase-admin"));
-class pushModule {
-    async initializeFirebase() {
+class PushNotificationService {
+    constructor() {
+        // Load Firebase service account key
+        const serviceAccount = require("/home/admin188/Desktop/WebSocket_POC/firebaseConfig.json");
+        // Initialize Firebase admin SDK
+        this.adminInstance = admin.initializeApp({
+            credential: admin.credential.cert(serviceAccount),
+            databaseURL: "...."
+        });
+    }
+    static getInstance() {
+        if (!PushNotificationService.instance) {
+            PushNotificationService.instance = new PushNotificationService();
+        }
+        return PushNotificationService.instance;
+    }
+    async sendPushNotification(receiverFCMToken, payload) {
+        const message = {
+            token: receiverFCMToken,
+            notification: {
+                title: payload.title,
+                body: payload.body
+            }
+        };
         try {
-            await admin.initializeApp({
-                credential: admin.credential.cert("firebaseConfig.json")
-            });
-            console.log("firebase-connection successfully established");
+            console.log("PUSH NOTIFICATION MESSAGE: ", message);
+            await this.adminInstance.messaging().send(message);
+            console.log("Push notification sent successfully");
         }
         catch (error) {
-            console.error("found-error", error);
+            console.error("Error sending push notification:", error);
+            throw error;
         }
     }
 }
-exports.pushNotification = new pushModule();
+exports.PushNotificationService = PushNotificationService;

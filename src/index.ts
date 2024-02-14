@@ -4,7 +4,7 @@ import {DB_connection} from "./integrations/database/dbConnection"
 import { chatRouters } from './routes/chat.routes';
 import { userRouters } from './routes/user.routes';
 import { SOCKET } from './integrations/socket/socket.connection';
-import { pushNotification } from './service/fcm/push-notification';
+import { PushNotificationService } from './service/fcm/push-notification';
 import appConfig from './config/appConfig';
 import { KafkaManager } from './integrations/producer/kafka/kafka';
 
@@ -25,7 +25,7 @@ class App{
         this.startApp();
         DB_connection();
         SOCKET();
-        pushNotification.initializeFirebase()
+        PushNotificationService;
     }
 
     /**
