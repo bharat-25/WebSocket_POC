@@ -9,7 +9,7 @@ exports.KAFKA_CONFIG = {
     TOPICS: {
         KAFKA_EVENTS: {
             topic: appConfig_1.default.env.KAFKA_TOPIC_PRODUCER || "DEFAULT_TOPIC",
-            numPartitions: 3,
+            numPartitions: 1,
             replicationFactor: 1,
         },
     },

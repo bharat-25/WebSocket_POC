@@ -4,7 +4,7 @@ export const KAFKA_CONFIG = {
     TOPICS: {
         KAFKA_EVENTS: {
             topic: appConfig.env.KAFKA_TOPIC_PRODUCER || "DEFAULT_TOPIC",
-            numPartitions: 3,
+            numPartitions: 1,
             replicationFactor: 1,
         },
     },

@@ -23,7 +23,7 @@ const handleSocketConnection = (io) => {
             onlineUsers[senderMobileNo] = true;
             console.log(`User with mobile number ${senderMobileNo} is connected with socket ID ${socket.id}`);
             // Check for any pending messages for this user and send push notifications
-            sendPendingMessages(senderMobileNo);
+            // sendPendingMessages(senderMobileNo);
         };
         const handleDisconnect = () => {
             const userMobile = Object.entries(socketIdByUserMobile).find(([_, id]) => id === socket.id)?.[0];
@@ -37,6 +37,7 @@ const handleSocketConnection = (io) => {
         socket.on("disconnect", handleDisconnect);
         socket.on("private-chat", async ({ message }) => {
             try {
+                console.log("----------INSIDE PRIVATE CHAT-------------------");
                 const { senderMobileNo, receiverMobileNo } = socket.data;
                 const [senderUser, receiverUser] = await Promise.all([
                     user_model_1.UserModel.findOne({ phone_number: senderMobileNo }),
@@ -51,25 +52,42 @@ const handleSocketConnection = (io) => {
                     receiverId: receiverUser ? receiverUser.id : null,
                     message,
                 });
-                const messageData = { senderName: senderUser.name.toString(), receiverName: receiverUser ? receiverUser.name.toString() : null, message };
-                const kafkaMessage = {
-                    value: JSON.stringify(messageData),
+                const pendingMsgData = {
+                    senderId: senderUser.id,
+                    receiverId: receiverUser.id,
+                    message,
                 };
+                const messageData = { senderName: senderUser.name.toString(),
+                    receiverName: receiverUser ? receiverUser.name.toString() : null,
+                    message
+                };
+                const kafkaMessage = { value: JSON.stringify(messageData) };
+                console.log(kafkaMessage);
                 await producer_service_1.producer.produce("KAFKA-TOPIC-PRODUCER", kafkaMessage);
                 console.log(`${messageData.senderName} sending to ${messageData.receiverName} MESSAGE:`, message);
                 if (receiverUser) {
+                    console.log("---------INSIDE IF RECEIVER_USER--------------");
                     const receiverSocketId = socketIdByUserMobile[receiverMobileNo];
                     if (receiverSocketId) {
+                        console.log("--------------INSIDE IF receiverSocketId-----------------");
+                        kafka = new kafka_1.KafkaManager();
+                        await kafka.connectToAdmin();
+                        await kafka.createTopics();
+                        await kafka.disconnectFromAdmin();
+                        const consumerData = await consumer_service_1.consumer.initiateConsumer();
+                        console.log("CONSUMER_DATA---------", consumerData);
                         io.to(receiverSocketId).emit("private-chat", messageData);
                     }
                     else {
+                        console.log("OFFLINE RECEIVER");
                         // Receiver is offline, save the message as pending
-                        savePendingMessage(receiverMobileNo, messageData);
+                        savePendingMessage(pendingMsgData);
                     }
                 }
                 else {
+                    console.log("RECEIVER NOT FOUND");
                     // Receiver not found, save the message as pending
-                    savePendingMessage(receiverMobileNo, messageData);
+                    savePendingMessage(pendingMsgData);
                 }
             }
             catch (error) {
@@ -112,18 +130,21 @@ const handleSocketConnection = (io) => {
     });
 };
 exports.handleSocketConnection = handleSocketConnection;
-async function savePendingMessage(receiverMobileNo, messageData) {
+async function savePendingMessage(pendingMsgData) {
     try {
+        console.log(pendingMsgData);
+        console.log("7777777777777");
         // Save the message as pending in the database
         const chat = await chat_model_1.default.create({
-            senderMobileNo: messageData.senderMobileNo,
-            receiverMobileNo: receiverMobileNo,
-            message: messageData.message,
+            senderId: pendingMsgData.senderId,
+            receiverId: pendingMsgData.receiverId,
+            message: pendingMsgData.message,
             delivered: false // Mark the message as not delivered
         });
         console.log("Message saved as pending:", chat);
     }
     catch (error) {
+        console.log("888888888888888");
         console.error("Error saving pending message:", error);
         throw error;
     }
@@ -144,14 +165,12 @@ async function sendPendingMessages(receiverMobileNo) {
     }
     catch (error) {
         console.error("Error sending pending messages:", error);
-        throw error;
+        // throw error;
     }
 }
 async function getPendingMessages(receiverMobileNo) {
     try {
         console.log("---------->inside try----------->");
-        // Retrieve pending messages for the receiverMobileNo from the database
-        // Example implementation using ChatModel
         // const pendingMessages = await ChatModel.find({ receiverMobileNo, delivered: false });
         this.kafka = new kafka_1.KafkaManager();
         await kafka.connectToAdmin();
