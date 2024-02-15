@@ -16,8 +16,10 @@ class ConsumerService {
         try {
             const consumer = new consumer_kafka_1.KafkaConsumer(topic, consumerConfig);
             await consumer.connect();
-            await consumer.consumeEachMessage(onMessage, consumerConcurrency);
-            this.consumers.push(consumer);
+            const data = await consumer.consumeEachMessage(onMessage, consumerConcurrency);
+            console.log("data is ", data, typeof data);
+            return data;
+            // this.consumers.push(consumer);
         }
         catch (error) {
             console.log("Kafka Consumer Error :: ", error);
@@ -28,7 +30,8 @@ class ConsumerService {
      */
     async initiateConsumer() {
         try {
-            await Promise.all([this.post()]);
+            const data = await Promise.all([this.post()]);
+            return data;
         }
         catch (error) {
             console.log("Kafka Initiate Consumer Error :: ", error);
@@ -50,7 +53,8 @@ class ConsumerService {
             onMessage: activity_consumer_1.activityConsumer.postActivity,
             consumerConcurrency: topicPartition,
         };
-        await this.consume(data);
+        const result = await this.consume(data);
+        return result;
     }
     async callBackForTest(key, value) {
         console.log("Kafka Consume Key ::", key);

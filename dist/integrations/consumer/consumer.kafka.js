@@ -23,11 +23,12 @@ class KafkaConsumer extends kafka_1.KafkaManager {
             eachMessage: async ({ message, partition }) => {
                 try {
                     const value = message.value?.toString();
-                    console.log("value:", value);
+                    console.log("value:******************************************", value);
                     if (value) {
                         // Parse the message value
                         const data = JSON.parse(value);
-                        console.log("---data is---__>", data);
+                        console.log("---data is-********************--__>", data);
+                        return data;
                     }
                     else {
                         console.log("No data Received");
