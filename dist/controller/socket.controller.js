@@ -13,16 +13,26 @@ const consumer_service_1 = require("../integrations/consumer/consumer.service");
 class SocketHandler {
     constructor(io) {
         this.io = io;
+        /**
+         * Object to map user mobile numbers to socket IDs, track online status of users..
+         * Instance of KafkaManager for Kafka integration.
+         */
         this.socketIdByUserMobile = {};
         this.onlineUsers = {};
         this.kafka = new kafka_1.KafkaManager();
         this.init();
     }
+    /**
+    * Initializes socket connection.
+    */
     init() {
         this.io.on("connection", (socket) => {
             this.handleConnection(socket);
         });
     }
+    /**
+     * Handles new socket connection.
+     */
     async handleConnection(socket) {
         console.log("User connected with socket ID", socket.id);
         socket.on("new-user-connect", (data) => this.handleUserConnect(socket, data));
@@ -31,6 +41,9 @@ class SocketHandler {
         socket.on("typing", (data) => this.handleTyping(data));
         socket.on("stopTyping", (data) => this.handleStopTyping(data));
     }
+    /**
+     * Handles new user connection.
+     */
     async handleUserConnect(socket, data) {
         const { senderMobileNo } = data;
         socket.data = data;
@@ -40,6 +53,9 @@ class SocketHandler {
         // Check for any pending messages for this user and send push notifications
         // this.sendPendingMessages(senderMobileNo);
     }
+    /**
+     * Handles socket disconnect.
+     */
     handleDisconnect(socket) {
         const userMobile = Object.entries(this.socketIdByUserMobile).find(([_, id]) => id === socket.id)?.[0];
         if (userMobile) {
@@ -48,6 +64,9 @@ class SocketHandler {
             console.log(`User with mobile number ${userMobile} disconnected`);
         }
     }
+    /**
+     * Handles private chat between users.
+     */
     async handlePrivateChat(socket, message) {
         try {
             console.log("----------INSIDE PRIVATE CHAT-------------------");
@@ -91,7 +110,7 @@ class SocketHandler {
                     this.io.to(receiverSocketId).emit("private-chat", messageData);
                 }
                 else {
-                    console.log("OFFLINE RECEIVER");
+                    console.log("------------OFFLINE RECEIVER-------------------");
                     // Receiver is offline, save the message as pending
                     await this.savePendingMessage(pendingMsgData);
                 }
@@ -106,22 +125,31 @@ class SocketHandler {
             console.error("Error processing private chat:", error);
         }
     }
+    /**
+       * Handles typing event.
+       */
     handleTyping(data) {
         const receiverSocketId = this.socketIdByUserMobile[data.receiverMobileNo];
         if (receiverSocketId) {
             this.io.to(receiverSocketId).emit("typing", data);
         }
     }
+    /**
+      * Handles stop typing event.
+      */
     handleStopTyping(data) {
         const receiverSocketId = this.socketIdByUserMobile[data.receiverMobileNo];
         if (receiverSocketId) {
             this.io.to(receiverSocketId).emit("stopTyping", data);
         }
     }
+    /**
+       * Saves pending message to the database.
+       */
     async savePendingMessage(pendingMsgData) {
         try {
             console.log(pendingMsgData);
-            console.log("7777777777777");
+            console.log("-----------SavePendingMessage---------------");
             // Save the message as pending in the database
             const chat = await chat_model_1.default.create({
                 senderId: pendingMsgData.senderId,
@@ -132,14 +160,16 @@ class SocketHandler {
             console.log("Message saved as pending:", chat);
         }
         catch (error) {
-            console.log("888888888888888");
+            console.log("SavePendingMessage ERRORRRRRRRRRRRRRRRRRRRRR");
             console.error("Error saving pending message:", error);
             throw error;
         }
     }
+    /**
+     * Sends pending messages to a user.
+     */
     async sendPendingMessages(receiverMobileNo) {
         try {
-            // Retrieve pending messages for the receiverMobileNo from the database
             const pendingMessages = await this.getPendingMessages(receiverMobileNo);
             // Get an instance of PushNotificationService
             const pushNotificationService = push_notification_1.PushNotificationService.getInstance();
@@ -156,6 +186,9 @@ class SocketHandler {
             // throw error;
         }
     }
+    /**
+     * Retrieves pending messages for a user.
+     */
     async getPendingMessages(receiverMobileNo) {
         try {
             console.log("---------->inside try----------->");
@@ -173,6 +206,9 @@ class SocketHandler {
         }
     }
 }
+/**
+ * Handles socket connection events.
+ */
 const handleSocketConnection = (io) => {
     new SocketHandler(io);
 };

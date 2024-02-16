@@ -1,3 +1,5 @@
 node_modules
-firebaseConfig.json
-/.env.local
+/firebaseConfig.json
+.env.local
+ssl/*
+dist/*
