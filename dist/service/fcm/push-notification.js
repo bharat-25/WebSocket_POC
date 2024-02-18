@@ -32,7 +32,7 @@ class PushNotificationService {
         // Initialize Firebase admin SDK
         this.adminInstance = admin.initializeApp({
             credential: admin.credential.cert(serviceAccount),
-            databaseURL: "...."
+            databaseURL: process.env.FCM_URL
         });
     }
     static getInstance() {
